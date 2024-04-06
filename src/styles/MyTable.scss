@@ -1,0 +1,98 @@
+// src/styles/MyTable.scss
+
+
+@import '~bootstrap/scss/bootstrap';
+
+$table-toolbar-bg: #f8f9fa; // 툴바 배경색
+$btn-primary-bg: #007bff; // 기본 버튼 색상
+$btn-hover-bg: darken($btn-primary-bg, 10%); // 버튼 호버 시 색상
+$input-border-color: #ced4da; // 입력 필드 테두리 색상
+$input-focus-border-color: lighten($input-border-color, 10%); // 입력 필드 포커스 시 테두리 색상
+
+
+.table-container {
+  margin: 2rem auto;
+  width: 90%;
+  max-width: 1200px;
+
+  .table-toolbar {
+    background-color: $table-toolbar-bg;
+    padding: 1rem;
+    border-bottom: 1px solid $input-border-color;
+
+    // "등록" 버튼 스타일
+    .btn-primary {
+      background-color: $btn-primary-bg;
+      border-color: transparent;
+      &:hover {
+        background-color: $btn-hover-bg;
+      }
+    }
+
+     // 검색 입력 필드 스타일
+     .form-control {
+      border-color: $input-border-color;
+      &:focus {
+        border-color: $input-focus-border-color;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
+    }
+
+    // 검색 버튼 스타일
+    .btn-outline-success {
+      margin-left: .5rem; // 검색 버튼과 입력 필드 사이의 간격
+    }
+    
+  // Bootstrap 테이블 커스터마이징
+  .table {
+    border-color: #ddd;
+
+    th {
+      background-color: #f8f9fa;
+      color: #333;
+      border-bottom: 2px solid #ddd;
+    }
+
+    td {
+      color: #555;
+      &:hover {
+        background-color: #f1f1f1;
+      }
+    }
+
+    // 상태에 따라 색상을 다르게 설정할 수 있습니다
+    .status-ok {
+      color: #28a745;
+    }
+
+    .status-warning {
+      color: #ffc107;
+    }
+
+    .status-critical {
+      color: #dc3545;
+    }
+  }
+
+  // 페이지네이션 커스터마이징
+  .pagination {
+    justify-content: center;
+    margin-top: 1rem;
+
+    .page-item {
+      .page-link {
+        color: #007bff;
+        &:hover {
+          color: #0056b3;
+        }
+      }
+    }
+  }
+  }
+
+}
+
+// 기본 스타일을 재정의하거나 확장
+//@import 'variables'; // 가정: 변수들을 저장해 둔 파일
+//@import 'mixins'; // 가정: 믹스인들을 저장해 둔 파일
+

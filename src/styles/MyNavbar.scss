@@ -1,0 +1,68 @@
+@import '~bootstrap/scss/bootstrap';
+
+$navbar-color: #ff0000 ; // 빨간색 계열
+
+
+.navbar-container {
+  height: 100vh; // 화면의 전체 높이
+  background-color: $navbar-color; // 배경색을 빨간색으로 설정
+  width: 250px; // 네비게이션 바의 너비와 동일하게 설정
+  position: fixed; // 페이지 스크롤 시에도 항상 같은 위치에 고정
+  left: 0; // 화면의 좌측에 위치
+  top: 0; // 화면의 최상단에 위치
+}
+
+.nav-link, .dropdown-toggle {
+  font-weight: bold; // 글자를 굵게
+  color: #fff !important; // 글자색을 흰색으로, 더 선명하게 보이도록
+}
+
+.navbar {
+  width: 250px;
+  flex-direction: column;
+  background-color: $navbar-color; // 네비게이션 바 전체 배경색 설정
+  height: 66.66vh; // 화면 높이의 2/3로 설정
+  overflow: auto; // 네비게이션 바의 내용이 높이를 초과할 경우 스크롤바 표시
+
+  .navbar-brand {
+    height: 100px; // 로고의 높이를 조절하세요
+    background-color: darken($navbar-color, 5%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
+  .navbar-toggler {
+    border-color: transparent;
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  .nav-link {
+    color: rgba(255, 255, 255, .75);
+    &:hover,
+    &:focus {
+      color: rgba(255, 255, 255, .9);
+    }
+  }
+
+  .nav-dropdown .dropdown-menu {
+      position: static;
+      float: none;
+      background-color: $navbar-color; // 드롭다운 메뉴 배경색도 설정
+
+      .dropdown-item {
+        color: #fff;
+        &:hover,
+        &:focus {
+          color: #000;
+          background-color: lighten($navbar-color, 20%);
+        }
+      }
+    
+  }
+}
+
+// 더 세부적인 스타일링이 필요할 수 있습니다.
