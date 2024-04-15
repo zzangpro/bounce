@@ -8,7 +8,7 @@ const MyNavbar = () => {
   return (
     <div className="navbar-container"> {/* 이 div 태그로 네비게이션 바를 감쌉니다 */}
       <Navbar expanded={expanded} expand="lg" bg="red" variant="dark" fixed="left">
-        <Navbar.Brand href="#home"><img src="logo.png" width="200" height="50" className="d-inline-block align-top" alt="" />
+        <Navbar.Brand href="http://localhost:3000/"><img src="logo.png" width="200" height="50" className="d-inline-block align-top" alt="" />
         </Navbar.Brand>
         <Navbar.Toggle onClick={() => setExpanded(expanded ? false : "expanded")} aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
@@ -43,6 +43,13 @@ const MyNavbar = () => {
               <NavDropdown.Item href="#action/5.1">전체 현황</NavDropdown.Item>
               <NavDropdown.Item href="#action/5.2">사용중</NavDropdown.Item>
               <NavDropdown.Item href="#action/5.3">해지</NavDropdown.Item>
+              {/* 하위 카테고리 */}
+            </NavDropdown>
+
+            <NavDropdown title="기사 통계" id="nav-dropdown5">
+              <NavDropdown.Item href="#action/6.1">전체 통계</NavDropdown.Item>
+              <NavDropdown.Item href="#action/6.2">지역별 통계</NavDropdown.Item>
+              <NavDropdown.Item href="#action/6.3">월별 통계</NavDropdown.Item>
               {/* 하위 카테고리 */}
             </NavDropdown>
           </Nav>

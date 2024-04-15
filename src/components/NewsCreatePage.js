@@ -2,22 +2,49 @@ import React, { useState } from 'react';
 import { Form, FormControl, Button, Row, Col, InputGroup } from 'react-bootstrap';
 import { Container } from 'react-bootstrap';
 import '../styles/NewsCreatePage.scss'; // 이 파일 내에 해당하는 스타일을 정의해야 함
+//import { addNews } from '../api/newsAPI'; // API 호출 함수 임포트
 
 const NewsCreatePage = ({ addNewsItem }) => {
   // 현재 날짜를 YYYY-MM-DD 형식으로 초기화
   const today = new Date().toISOString().split('T')[0];
+  
+  const submitNewsItem = async (newsItem) => {
+    try {
+        const response = await fetch('http://localhost:3000/news', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newsItem),
+        });
+
+        if (!response.ok) {
+            throw new Error('Something went wrong');
+        }
+
+        const data = await response.json();
+        console.log('Success:', data);
+        // 여기에서 추가 처리를 할 수 있습니다...
+    } catch (error) {
+        console.error('Error:', error);
+    }
+};
 
   // 상태 관리
   const [formData, setFormData] = useState({
-    creationDate: today, // 입력 날짜, 현재 날짜로 자동 설정
-    category1: '',
-    category2: '',
-    category3: '',
-    category4: '',
-    title: '',
-    subtitle: '', // 부제목 추가
-    content: '',
-    image: '', // 이미지 경로 또는 Base64 인코딩 데이터
+    creationDate: today, // 현재 날짜
+    updateDate: today, // 업데이트 날짜도 추가해야 할 수 있음
+    category1: '', // 선택된 값
+    category2: '', // 선택된 값
+    category3: '', // 선택된 값
+    category4: '', // 선택된 값
+    author: '', // 입력된 값
+    editor: '', // 입력된 값
+    title: '', // 입력된 제목
+    subtitle: '', // 입력된 부제목, `MyTable`에서 사용하지 않는다면 제외해도 됨
+    content: '', // 입력된 내용, `MyTable`에서 사용하지 않는다면 제외해도 됨
+    image: '', // 업로드된 이미지 정보
+    status: '' // 상태 정보, 필요에 따라 추가
   });
 
   // 입력 핸들러
@@ -41,6 +68,7 @@ const NewsCreatePage = ({ addNewsItem }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // addNewsItem 함수를 호출하여 상위 컴포넌트로 데이터 전달
+    console.log('Form submitted', formData);
     addNewsItem(formData);
     // 폼 초기화 또는 페이지 이동 등 추가 작업을 수행할 수 있습니다.
   };
