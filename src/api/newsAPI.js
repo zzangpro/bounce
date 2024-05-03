@@ -1,5 +1,5 @@
 // /api/newsAPI.js
-const BASE_URL = 'http://localhost:3000/news';
+const BASE_URL = 'http://localhost:5000';
 
 export const addNews = async (newsData) => {
   const response = await fetch(BASE_URL, {

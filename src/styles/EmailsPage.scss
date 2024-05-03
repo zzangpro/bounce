@@ -1,0 +1,130 @@
+.emails-container {
+  margin-top: 50px;
+  padding-left: 270px; // 네비게이션 바의 너비만큼 왼쪽 패딩 설정
+  padding-right: 50px;
+  min-height: 100vh; // 최소 높이 설정
+  background-color: #f4f4f4; // 배경 색상 설정
+}
+
+.table-container {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  thead {
+    background-color: #007bff;
+    color: #ffffff;
+    tr {
+      th {
+        padding: 15px 20px;
+        text-align: left;
+        font-weight: 500;
+        font-size: 16px;
+        border-bottom: 2px solid darken(#007bff, 5%);
+      }
+    }
+  }
+  tbody {
+    tr {
+      &:nth-child(odd) {
+        background-color: #f9f9f9;
+      }
+      &:hover {
+        background-color: #f1f1f1;
+      }
+      td {
+        padding: 12px 20px;
+        border-bottom: 1px solid #ddd;
+        font-size: 14px;
+        color: #333;
+      }
+    }
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  li {
+    list-style: none;
+    margin: 0 5px;
+    a {
+      text-decoration: none;
+      display: block;
+      padding: 8px 16px;
+      background-color: #007bff;
+      border-radius: 4px;
+      color: white;
+      &:hover {
+        background-color: darken(#007bff, 10%);
+      }
+    }
+    &.active a {
+      background-color: darken(#007bff, 20%);
+    }
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* 반응형 디자인 추가 */
+@media (max-width: 768px) {
+  .table thead th, .table tbody td {
+    padding: 8px; // 테이블 패딩 감소
+  }
+
+  .table thead th {
+    font-size: 14px; // 테이블 헤더 폰트 사이즈 감소
+  }
+
+  .emails-container {
+    padding-left: 20px;
+  }
+
+  .table tbody td {
+    font-size: 12px; // 테이블 바디 폰트 사이즈 감소
+  }
+
+  .pagination a {
+    padding: 6px 10px; // 페이지네이션 패딩 감소
+    font-size: 12px; // 페이지네이션 폰트 사이즈 감소
+  }
+}
+
+@media (max-width: 480px) {
+  .table-container {
+    max-width: 100%; // 컨테이너 최대 너비 변경
+  }
+
+  .table thead th {
+    display: none; // 테이블 헤더 숨김
+  }
+
+  .table tbody td {
+    display: block;
+    width: 100%;
+    text-align: right;
+    &:before {
+      content: attr(data-label);
+      float: left;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+  }
+
+  .pagination {
+    flex-wrap: wrap; // 페이지네이션 항목 감싸기
+  }
+}

@@ -5,6 +5,7 @@ import '../styles/MyNavbar.scss'; // 이 파일 내에 해당하는 스타일을
 const MyNavbar = () => {
   const [expanded, setExpanded] = useState(false);
 
+
   return (
     <div className="navbar-container"> {/* 이 div 태그로 네비게이션 바를 감쌉니다 */}
       <Navbar expanded={expanded} expand="lg" bg="red" variant="dark" fixed="left">
@@ -33,7 +34,7 @@ const MyNavbar = () => {
               {/* 하위 카테고리 */}
             </NavDropdown>
             <NavDropdown title="이메일" id="nav-dropdown4">
-             <NavDropdown.Item href="#action/4.1">가져온 이메일</NavDropdown.Item>
+             <NavDropdown.Item href="emails">가져온 이메일</NavDropdown.Item>
              <NavDropdown.Item href="#action/4.2">사용한 이메일</NavDropdown.Item>
 
 

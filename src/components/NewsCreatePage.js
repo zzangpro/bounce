@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, FormControl, Button, Row, Col, InputGroup } from 'react-bootstrap';
+import { Form, Button, Row, Col, } from 'react-bootstrap';
 import { Container } from 'react-bootstrap';
 import '../styles/NewsCreatePage.scss'; // 이 파일 내에 해당하는 스타일을 정의해야 함
 //import { addNews } from '../api/newsAPI'; // API 호출 함수 임포트
@@ -10,7 +10,7 @@ const NewsCreatePage = ({ addNewsItem }) => {
   
   const submitNewsItem = async (newsItem) => {
     try {
-        const response = await fetch('http://localhost:3000/news', {
+        const response = await fetch('http://localhost:5000/news', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -24,6 +24,7 @@ const NewsCreatePage = ({ addNewsItem }) => {
 
         const data = await response.json();
         console.log('Success:', data);
+        addNewsItem(data);  // 데이터를 상위 컴포넌트의 상태에 추가
         // 여기에서 추가 처리를 할 수 있습니다...
     } catch (error) {
         console.error('Error:', error);
