@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, } from 'react-bootstrap';
 import { Container } from 'react-bootstrap';
 import '../styles/NewsCreatePage.scss'; // 이 파일 내에 해당하는 스타일을 정의해야 함
+import HwpDataProcessor from './HwpDataProcessor';
 //import { addNews } from '../api/newsAPI'; // API 호출 함수 임포트
 
 const NewsCreatePage = ({ addNewsItem }) => {
@@ -48,6 +49,18 @@ const NewsCreatePage = ({ addNewsItem }) => {
     status: '' // 상태 정보, 필요에 따라 추가
   });
 
+
+  const handleHwpData = (processedData) => {
+    setFormData({
+      ...formData,
+      title: processedData.title || '',
+      subtitle: processedData.subtitle || '',
+      content: processedData.content || '',
+      image: processedData.image || ''
+    });
+  };
+  
+
   // 입력 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,71 +68,95 @@ const NewsCreatePage = ({ addNewsItem }) => {
   };
 
   // 이미지 업로드 핸들러
-  const handleImageChange = (e) => {
-    // 파일 리더를 사용하여 이미지를 Base64로 인코딩합니다.
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({ ...formData, image: reader.result });
-    };
-    reader.readAsDataURL(file);
+    const formData = new FormData();
+    formData.append('image', file);
+  
+    try {
+      const response = await fetch('http://localhost:5000/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error('Image upload failed');
+      }
+  
+      const data = await response.json();
+      setFormData({ ...formData, image: data.imageUrl });  // 이미지 URL을 formData에 저장
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
   };
 
   // 저장 핸들러
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // addNewsItem 함수를 호출하여 상위 컴포넌트로 데이터 전달
     console.log('Form submitted', formData);
-    addNewsItem(formData);
-    // 폼 초기화 또는 페이지 이동 등 추가 작업을 수행할 수 있습니다.
+      // addNewsItem 함수를 호출하여 상위 컴포넌트로 데이터 전달
+    try {
+      const response = await fetch('http://localhost:5000/news', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Something went wrong');
+      }
+  
+      const data = await response.json();
+      console.log('Success:', data);
+      addNewsItem(data);  // 데이터를 상위 컴포넌트의 상태에 추가
+      // 추가적인 성공 처리 로직 (예: 폼 초기화, 성공 알림 표시 등)
+    } catch (error) {
+      console.error('Error:', error);
+      // 사용자에게 에러를 알릴 수 있는 UI 처리 추가
+    }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/news/data'); // 서버 API 경로
+        if (!response.ok) {
+          throw new Error('Failed to fetch news data');
+        }
+        const data = await response.json();
+        setFormData({
+          ...formData,
+          title: data.title,
+          subtitle: data.subtitle,
+          content: data.content,
+          image: data.image // 서버에서 이미지 URL을 보내주는 경우
+        });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
   return (
     <Container>
+      <HwpDataProcessor onProcessed={handleHwpData} />
       <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Col xs={12} md={6}>
-            <Form.Group controlId="formCategory1">
-              <Form.Label>카테고리1</Form.Label>
-              <Form.Control as="select" name="category1" value={formData.category1} onChange={handleChange}>
-                <option value="">선택하세요</option>
-                {/* 카테고리 옵션을 동적으로 렌더링 */}
-              </Form.Control>
-            </Form.Group>
-          </Col>
-
-           {/* 카테고리2 드롭다운 */}
-           <Col xs={12} md={6}>
-            <Form.Group controlId="formCategory2">
-              <Form.Label>카테고리2</Form.Label>
-              <Form.Control as="select" name="category2" value={formData.category2} onChange={handleChange}>
-                <option value="">선택하세요</option>
-                {/* 카테고리2 옵션 여기에 추가 */}
-              </Form.Control>
-            </Form.Group>
-          </Col>
-
-          {/* 카테고리3 드롭다운 */}
-          <Col xs={12} md={6}>
-            <Form.Group controlId="formCategory3">
-              <Form.Label>카테고리3</Form.Label>
-              <Form.Control as="select" name="category3" value={formData.category3} onChange={handleChange}>
-                <option value="">선택하세요</option>
-                {/* 카테고리3 옵션 여기에 추가 */}
-              </Form.Control>
-            </Form.Group>
-          </Col>
-
-          {/* 카테고리4 드롭다운 */}
-          <Col xs={12} md={6}>
-            <Form.Group controlId="formCategory4">
-              <Form.Label>카테고리4</Form.Label>
-              <Form.Control as="select" name="category4" value={formData.category4} onChange={handleChange}>
-                <option value="">선택하세요</option>
-                {/* 카테고리4 옵션 여기에 추가 */}
-              </Form.Control>
-            </Form.Group>
-          </Col>
+      <Row className="mb-3">
+          {['category1', 'category2', 'category3', 'category4'].map((category, index) => (
+            <Col xs={12} md={6} key={index}>
+              <Form.Group controlId={`form${category.charAt(0).toUpperCase() + category.slice(1)}`}>
+                <Form.Label>{`카테고리${index + 1}`}</Form.Label>
+                <Form.Control as="select" name={category} value={formData[category]} onChange={handleChange}>
+                  <option value="">선택하세요</option>
+                  {/* 카테고리 옵션을 동적으로 렌더링 필요 */}
+                </Form.Control>
+              </Form.Group>
+            </Col>
+          ))}
         </Row>
         <Form.Group controlId="formTitle">
           <Form.Label>제목</Form.Label>

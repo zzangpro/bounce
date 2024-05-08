@@ -1,9 +1,17 @@
+import sys
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from pymongo import MongoClient
 import email_downloader  # 이메일 처리 모듈 임포트
 from bson import ObjectId, json_util
 from bson.errors import InvalidId
+from pyhwp import hwp
+
+sys.path.append('D:\\bounce\\backend\\venv\\Lib\\site-packages')
+print(sys.path)
+
+
+
 
 
 app = Flask(__name__)
@@ -15,6 +23,11 @@ db = client['bounce']
 news_collection = db['news']  # 뉴스 컬렉션
 emails_collection = db['emails']  # 이메일 컬렉션
 
+def extract_hwp_content(file_path):
+    hwp_file = hwp5.open(file_path)
+    hwp_text = hwp_file.read_text()
+    return hwp_text
+
 def fetch_emails_from_db():
     try:
         # 첨부파일 정보를 포함하여 이메일을 조회
@@ -24,6 +37,16 @@ def fetch_emails_from_db():
         print(f"An error occurred: {e}")
         return []
     
+
+@app.route('/api/extract-hwp', methods=['POST'])
+def extract_hwp():
+    request_data = request.get_json()
+    file_path = request_data.get('filePath')
+    try:
+        content = extract_hwp_content(file_path)
+        return jsonify({'content': content}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     
 
 @app.route('/')
@@ -79,6 +102,17 @@ def get_email_detail(id):
             return Response(json_util.dumps(email), mimetype='application/json')
         else:
             return jsonify({'error': 'Email not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/process-hwp', methods=['POST'])
+def process_hwp():
+    request_data = request.get_json()
+    file_path = request_data.get('file_path')
+    try:
+        hwp_file = hwp5.open(file_path)
+        hwp_text = hwp_file.read_text()
+        return jsonify({'content': hwp_text})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

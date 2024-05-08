@@ -19,8 +19,13 @@ const EmailsPage = () => {
         }
         const data = await response.json();
         console.log(data);  // 데이터 구조 확인
-        setEmails(data);
-        setFilteredEmails(data); // 검색 없이 초기 데이터 설정
+
+        // 데이터를 날짜 내림차순으로 정렬
+        const sortedData = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        setEmails(sortedData);
+        setFilteredEmails(sortedData); // 검색 없이 초기 데이터 설정
+        
       } catch (error) {
         console.error('Error fetching emails:', error);
       }

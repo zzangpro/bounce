@@ -6,6 +6,7 @@ import schedule
 import time
 from pymongo import MongoClient
 import os
+import re
 from email.mime.base import MIMEBase
 import subprocess
 from PIL import Image
@@ -32,6 +33,18 @@ try:
     print("MongoDB connected successfully.")
 except Exception as e:
     print("Failed to connect to MongoDB:", e)
+    
+def decode_mime_words(s):
+    # MIME 인코딩된 문자열을 디코딩
+    return u''.join(
+        word.decode(encoding or 'utf-8') if isinstance(word, bytes) else word
+        for word, encoding in decode_header(s))    
+    
+def clean_filename(filename):
+    # 파일 이름에서 유효하지 않은 문자 제거
+    filename = decode_mime_words(filename)
+    filename = re.sub(r'[\\/*?:"<>|]', '', filename)
+    return filename
     
 def extract_text_from_image(image_path):
     img = Image.open(image_path)
@@ -65,6 +78,8 @@ def download_emails():
         mail.select('inbox')
         status, messages = mail.search(None, 'ALL')
         messages = messages[0].split()
+        messages.reverse()  # 메시지 ID를 역순으로 정렬하여 최신 이메일부터 처리
+
 
         for msg_id in messages:
             res, msg = mail.fetch(msg_id, "(RFC822)")
@@ -87,18 +102,26 @@ def download_emails():
                         
                         has_attachments = True
                         filename = part.get_filename()
-                        if bool(filename):
-                            filepath = os.path.join('/path/to/save', filename)
-                            with open(filepath, 'wb') as f:
-                                f.write(part.get_payload(decode=True))
-                            attachment_files.append({'filename': filename, 'path': filepath})
-
+                        if filename:
+                            filename = clean_filename(filename)
+                            filepath = os.path.join('D:\\path\\to\\save', filename)
+                            try:
+                                with open(filepath, 'wb') as f:
+                                    f.write(part.get_payload(decode=True))
+                                attachment_files.append({'filename': filename, 'path': filepath})
+                            except OSError as e:
+                                logging.error(f"Cannot save file {filepath}: {e}")
+                                
                     save_email(subject, sender, date, has_attachments, attachment_files)
     except (imaplib.IMAP4.error, Exception) as e:
-        print("Error connecting or processing email:", e)
+        logging.error("Error connecting or processing email:", exc_info=True)
     finally:
         if mail is not None:
             mail.logout()
+            
+            # 로깅 설정
+logging.basicConfig(level=logging.DEBUG, filename='email_downloader.log',
+                    format='%(asctime)s:%(levelname)s:%(message)s')
 
 schedule.every(1).minutes.do(download_emails)
 
