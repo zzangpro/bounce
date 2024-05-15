@@ -4,7 +4,7 @@ from pymongo import MongoClient
 import email_downloader  # 이메일 처리 모듈 임포트
 from bson import ObjectId, json_util
 from bson.errors import InvalidId
-import hwp_processor  # HWP 파일 처리 모듈 임포트
+#import hwp_processor  # HWP 파일 처리 모듈 임포트
 
 app = Flask(__name__)
 CORS(app)
@@ -14,6 +14,8 @@ client = MongoClient('mongodb+srv://jyspress:LFC5XdWvhfJ3Io6s@cluster0.ninp3j8.m
 db = client['bounce']
 news_collection = db['news']  # 뉴스 컬렉션
 emails_collection = db['emails']  # 이메일 컬렉션
+categories_collection = db['categories']
+
 
 def fetch_emails_from_db():
     try:
@@ -38,6 +40,13 @@ def extract_hwp():
 def home():
     return "Welcome to the News API", 200
 
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    categories = list(categories_collection.find({}, {'_id': 0}))
+    if not categories:
+        return jsonify({'error': 'No categories found'}), 404
+    return jsonify(categories), 200
+
 @app.route('/news', methods=['GET'])
 def get_news():
     news_items = list(news_collection.find({}, {'_id': 0}))
@@ -50,6 +59,21 @@ def add_news():
     news_data['_id'] = str(result.inserted_id)
     return jsonify(news_data), 201
 
+@app.route('/api/news/data', methods=['GET'])
+def get_news_data():
+    # news 데이터를 가져오는 로직을 여기에 추가
+    # 예시로 news_collection의 첫 번째 문서를 반환하도록 합니다.
+    news_data = news_collection.find_one()
+    if not news_data:
+        return jsonify({'error': 'No news data found'}), 404
+    return jsonify({
+        'title': news_data.get('title', ''),
+        'subtitle': news_data.get('subtitle', ''),
+        'content': news_data.get('content', ''),
+        'image': news_data.get('image', '')
+    }), 200
+
+
 @app.route('/fetch-emails')
 def fetch_emails():
     try:
@@ -59,7 +83,7 @@ def fetch_emails():
         email_downloader.download_attachments(email_address, password, save_path)
         return jsonify({'status': 'success', 'message': 'Emails fetched and attachments downloaded'})
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/emails', methods=['GET'])
 def get_emails():

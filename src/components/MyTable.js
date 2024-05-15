@@ -6,6 +6,7 @@ import '../styles/MyTable.scss'; // 스타일 파일
 
 const MyTable = () => {
   const [newsData, setNewsData] = useState([]); // 서버에서 받아온 뉴스 데이터를 저장할 상태
+  const [categories, setCategories] = useState({});
   const [searchTerm, setSearchTerm] = useState(''); // 검색어 상태
   const navigate = useNavigate();
 
@@ -22,6 +23,27 @@ const MyTable = () => {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    // 서버에서 카테고리 데이터를 불러오는 함수
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/categories');
+        const data = await response.json();
+        // 카테고리 데이터를 평탄화하여 코드-이름 매핑 객체 생성
+        const categoryMap = {};
+        data[0].category1.forEach(cat => categoryMap[cat.id] = cat.name);
+        data[0].category2.forEach(cat => categoryMap[cat.id] = cat.name);
+        data[0].category3.forEach(cat => categoryMap[cat.id] = cat.name);
+        data[0].category4.forEach(cat => categoryMap[cat.id] = cat.name);
+        setCategories(categoryMap); // 카테고리 매핑 객체 상태 업데이트
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
   const handleRegisterClick = () => {
@@ -79,10 +101,10 @@ const MyTable = () => {
               <td>{item.title}</td>
               <td>{item.author}</td>
               <td>{item.editor}</td>
-              <td>{item.category1}</td>
-              <td>{item.category2}</td>
-              <td>{item.category3}</td>
-              <td>{item.category4}</td>
+              <td>{categories[item.category1]}</td>
+              <td>{categories[item.category2]}</td>
+              <td>{categories[item.category3]}</td>
+              <td>{categories[item.category4]}</td>
               <td>{item.image}</td>
               <td>{item.status}</td>
             </tr>
