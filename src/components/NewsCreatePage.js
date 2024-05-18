@@ -3,7 +3,6 @@ import { Form, Button, Row, Col } from 'react-bootstrap';
 import { Container } from 'react-bootstrap';
 import '../styles/NewsCreatePage.scss';
 import HwpDataProcessor from './HwpDataProcessor';
-import CategoryData from './CategoryData';
 
 const NewsCreatePage = ({ addNewsItem }) => {
   const today = new Date().toISOString().split('T')[0];
@@ -38,12 +37,11 @@ const NewsCreatePage = ({ addNewsItem }) => {
         if (!response.ok) throw new Error('Failed to fetch categories');
         const data = await response.json();
         console.log('Fetched categories:', data);
-        const firstCategorySet = data[0];
         setCategories({
-          category1: firstCategorySet.category1 || [],
-          category2: firstCategorySet.category2 || [],
-          category3: firstCategorySet.category3 || [],
-          category4: firstCategorySet.category4 || []
+          category1: data[0].category1 || [],
+          category2: data[0].category2 || [],
+          category3: data[0].category3 || [],
+          category4: data[0].category4 || []
         });
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -70,13 +68,13 @@ const NewsCreatePage = ({ addNewsItem }) => {
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    const imageData = new FormData();
-    imageData.append('image', file);
+    const formData = new FormData();
+    formData.append('image', file);
 
     try {
       const response = await fetch('http://localhost:5000/upload/image', {
         method: 'POST',
-        body: imageData,
+        body: formData,
       });
 
       if (!response.ok) {
@@ -115,39 +113,43 @@ const NewsCreatePage = ({ addNewsItem }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:5000/api/news/data');
-        if (!response.ok) {
-          throw new Error('Failed to fetch news data');
-        }
-        const data = await response.json();
-        setFormData({
-          ...formData,
-          title: data.title,
-          subtitle: data.subtitle,
-          content: data.content,
-          image: data.image
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+  const handleAutoFill = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/process-hwp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
 
-    fetchData();
-  }, []);
+      if (!response.ok) {
+        throw new Error('Failed to auto-fill data');
+      }
+
+      const data = await response.json();
+      setFormData((prevData) => ({
+        ...prevData,
+        title: data.title,
+        subtitle: data.subtitle,
+        content: data.content,
+      }));
+    } catch (error) {
+      console.error('Error auto-filling data:', error);
+    }
+  };
 
   return (
     <Container>
       <HwpDataProcessor onProcessed={handleHwpData} />
+      <Button onClick={handleAutoFill}>자동 채우기</Button>
       <Form onSubmit={handleSubmit}>
         <Row className="mb-3">
           {Object.keys(categories).map((key, index) => (
             <Col xs={12} md={6} key={key}>
               <Form.Group controlId={`form${key}`}>
                 <Form.Label>{`카테고리${index + 1}`}</Form.Label>
-                <Form.Control as="select" name={key} value={formData[key]} onChange={handleChange}>
+                <Form.Control as="select" name={key.slice(0, -7)} value={formData[key.slice(0, -7)]} onChange={handleChange}>
                   <option value="">선택하세요</option>
                   {Array.isArray(categories[key]) && categories[key].map((option) => (
                     <option key={option.id} value={option.id}>{option.name}</option>

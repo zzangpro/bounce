@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
+import hwp_processor  # HWP 파일 처리 모듈 임포트
 from pymongo import MongoClient
-import email_downloader  # 이메일 처리 모듈 임포트
 from bson import ObjectId, json_util
-from bson.errors import InvalidId
-#import hwp_processor  # HWP 파일 처리 모듈 임포트
 
 app = Flask(__name__)
 CORS(app)
@@ -12,28 +11,41 @@ CORS(app)
 # MongoDB Atlas 연결
 client = MongoClient('mongodb+srv://jyspress:LFC5XdWvhfJ3Io6s@cluster0.ninp3j8.mongodb.net/')
 db = client['bounce']
-news_collection = db['news']  # 뉴스 컬렉션
-emails_collection = db['emails']  # 이메일 컬렉션
+news_collection = db['news']
+emails_collection = db['emails']
 categories_collection = db['categories']
 
-
-def fetch_emails_from_db():
+@app.route('/api/process-hwp', methods=['POST'])
+def process_hwp():
     try:
-        # 첨부파일 정보를 포함하여 이메일을 조회
-        emails = list(emails_collection.find({}, {'attachments': 1, 'subject': 1, 'date': 1, 'from': 1}))
-        return json_util.dumps(emails)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return []
+        # MongoDB에서 가장 최근의 이메일을 가져옵니다.
+        email = emails_collection.find_one(sort=[('_id', -1)])
+        if not email or 'attachments' not in email or not email['attachments']:
+            return jsonify({'error': 'No email attachments found'}), 404
 
-@app.route('/api/extract-hwp', methods=['POST'])
-def extract_hwp():
-    request_data = request.get_json()
-    file_path = request_data.get('filePath')
-    try:
-        content = hwp_processor.extract_text(file_path)
-        return jsonify({'content': content}), 200
+        # 첨부파일 경로 설정 (예제에서는 첫 번째 첨부파일을 처리)
+        attachment = email['attachments'][0]
+        attachment_path = attachment['path']  # 올바른 키를 사용하여 경로를 가져옴
+
+        # 로그 추가: 경로 확인
+        print(f"Processing HWP file at path: {attachment_path}")
+
+        # HWP 파일 처리
+        if not os.path.exists(attachment_path):
+            return jsonify({'error': f'File not found: {attachment_path}'}), 404
+
+        content = hwp_processor.extract_text(attachment_path)
+        title, subtitle, content_text, category = hwp_processor.analyze_content(content)
+        data = {
+            'title': title,
+            'subtitle': subtitle,
+            'content': content_text,
+            'category': category
+        }
+        return jsonify(data), 200
     except Exception as e:
+        # 로그 추가: 에러 메시지 출력
+        print(f"Error processing HWP file: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/')
@@ -73,7 +85,6 @@ def get_news_data():
         'image': news_data.get('image', '')
     }), 200
 
-
 @app.route('/fetch-emails')
 def fetch_emails():
     try:
@@ -87,9 +98,8 @@ def fetch_emails():
 
 @app.route('/api/emails', methods=['GET'])
 def get_emails():
-    emails_json = fetch_emails_from_db()
-    print(emails_json)
-    return Response(emails_json, mimetype='application/json')
+    emails = list(emails_collection.find({}))
+    return Response(json_util.dumps(emails), mimetype='application/json')
 
 @app.route('/api/emails/<id>', methods=['GET'])
 def get_email_detail(id):
