@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import os
 import hwp_processor  # HWP 파일 처리 모듈 임포트
@@ -6,7 +6,8 @@ from pymongo import MongoClient
 from bson import ObjectId, json_util
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})  # 모든 경로에 대해 모든 도메인 허용
+
 
 # MongoDB Atlas 연결
 client = MongoClient('mongodb+srv://jyspress:LFC5XdWvhfJ3Io6s@cluster0.ninp3j8.mongodb.net/')
