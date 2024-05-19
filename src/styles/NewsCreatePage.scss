@@ -1,48 +1,33 @@
-$primary-color: #007bff; // 또는 프로젝트의 주 색상
-$secondary-color: #6c757d; // 보조 색상
-$background-color: #f8f9fa; // 배경색
-$font-color: #495057; // 기본 폰트 색상
-$border-color: #ced4da; // 테두리 색상
-$placeholder-color: #6c757d; // 플레이스홀더 텍스트 색상
-
-.news-create-page {
-  background-color: $background-color;
+.news-create-container {
+  max-width: 800px;
+  margin: auto;
   padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
-  .form-control, .form-select {
-    border-radius: 0.25rem;
-    border: 1px solid $border-color;
-    color: $font-color;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-
-    &::placeholder {
-      color: $placeholder-color;
-    }
-  }
-
-  label {
-    color: $secondary-color;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
   }
 
   .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 15px;
+  }
+
+  .btn-secondary {
+    width: 100%;
   }
 
   .btn-primary {
-    background-color: $primary-color;
-    border-color: $primary-color;
-    &:hover {
-      background-color: darken($primary-color, 5%);
-      border-color: darken($primary-color, 5%);
-    }
+    width: 100%;
   }
 
-  .Container {
-    max-width: 720px; // 폼의 최대 너비를 설정하여 중앙에 위치시킵니다.
-    margin-top: 30px;
-    margin: auto;
+  textarea {
+    resize: vertical;
+  }
+
+  input[type="file"] {
+    padding: 5px;
   }
 }

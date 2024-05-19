@@ -1,116 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Row, Col } from 'react-bootstrap';
-import { Container } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import '../styles/NewsCreatePage.scss';
-import HwpDataProcessor from './HwpDataProcessor';
 
-const NewsCreatePage = ({ addNewsItem }) => {
-  const today = new Date().toISOString().split('T')[0];
-
+const NewsCreatePage = () => {
   const [formData, setFormData] = useState({
-    creationDate: today,
-    updateDate: today,
+    title: '',
+    subtitle: '',
+    content: '',
     category1: '',
     category2: '',
     category3: '',
     category4: '',
-    author: '',
-    editor: '',
-    title: '',
-    subtitle: '',
-    content: '',
-    image: '',
-    status: ''
+    image: null,
   });
 
-  const [categories, setCategories] = useState({
-    category1: [],
-    category2: [],
-    category3: [],
-    category4: []
-  });
+  const [categories, setCategories] = useState({ category1: [], category2: [], category3: [], category4: [] });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/categories');
-        if (!response.ok) throw new Error('Failed to fetch categories');
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
         const data = await response.json();
         console.log('Fetched categories:', data);
-        setCategories({
-          category1: data[0].category1 || [],
-          category2: data[0].category2 || [],
-          category3: data[0].category3 || [],
-          category4: data[0].category4 || []
-        });
+  
+        const categorizedData = {
+          category1: data[0].category1,
+          category2: data[0].category2,
+          category3: data[0].category3,
+          category4: data[0].category4,
+        };
+  
+        setCategories(categorizedData);
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
     };
-
+  
     fetchCategories();
   }, []);
-
-  const handleHwpData = (processedData) => {
-    setFormData({
-      ...formData,
-      title: processedData.title || '',
-      subtitle: processedData.subtitle || '',
-      content: processedData.content || '',
-      image: processedData.image || ''
-    });
-  };
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  const handleImageChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await fetch('http://localhost:5000/upload/image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Image upload failed');
-      }
-
-      const data = await response.json();
-      setFormData((prevFormData) => ({ ...prevFormData, image: data.imageUrl }));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Form submitted', formData);
-    try {
-      const response = await fetch('http://localhost:5000/news', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        console.error('Error:', await response.text());
-        return;
-      }
-
-      const data = await response.json();
-      console.log('Success:', data);
-      addNewsItem(data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
+    setFormData((prevData) => ({
+      ...prevData,
+      image: file,
+    }));
   };
 
   const handleAutoFill = async () => {
@@ -139,43 +87,144 @@ const NewsCreatePage = ({ addNewsItem }) => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const formDataToSubmit = new FormData();
+      formDataToSubmit.append('title', formData.title);
+      formDataToSubmit.append('subtitle', formData.subtitle);
+      formDataToSubmit.append('content', formData.content);
+      formDataToSubmit.append('category1', formData.category1);
+      formDataToSubmit.append('category2', formData.category2);
+      formDataToSubmit.append('category3', formData.category3);
+      formDataToSubmit.append('category4', formData.category4);
+      if (formData.image) {
+        formDataToSubmit.append('image', formData.image);
+      }
+
+      const response = await fetch('http://localhost:5000/news', {
+        method: 'POST',
+        body: formDataToSubmit,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create news');
+      }
+
+      navigate('/news');
+    } catch (error) {
+      console.error('Error creating news:', error);
+    }
+  };
+
   return (
-    <Container>
-      <HwpDataProcessor onProcessed={handleHwpData} />
-      <Button onClick={handleAutoFill}>자동 채우기</Button>
+    <Container className="news-create-container">
+      <h2>Create News</h2>
+      <Row className="mb-3">
+        <Col>
+          <Button variant="secondary" onClick={handleAutoFill}>Auto Fill</Button>
+        </Col>
+      </Row>
       <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          {Object.keys(categories).map((key, index) => (
-            <Col xs={12} md={6} key={key}>
-              <Form.Group controlId={`form${key}`}>
-                <Form.Label>{`카테고리${index + 1}`}</Form.Label>
-                <Form.Control as="select" name={key.slice(0, -7)} value={formData[key.slice(0, -7)]} onChange={handleChange}>
-                  <option value="">선택하세요</option>
-                  {Array.isArray(categories[key]) && categories[key].map((option) => (
-                    <option key={option.id} value={option.id}>{option.name}</option>
-                  ))}
-                </Form.Control>
-              </Form.Group>
-            </Col>
-          ))}
-        </Row>
+        <Form.Group controlId="formCategory1">
+          <Form.Label>Category 1</Form.Label>
+          <Form.Control
+            as="select"
+            name="category1"
+            value={formData.category1}
+            onChange={handleChange}
+          >
+            <option value="">Select a category</option>
+            {categories.category1.map((category, index) => (
+              <option key={index} value={category.name}>{category.name}</option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+        <Form.Group controlId="formCategory2">
+          <Form.Label>Category 2</Form.Label>
+          <Form.Control
+            as="select"
+            name="category2"
+            value={formData.category2}
+            onChange={handleChange}
+          >
+            <option value="">Select a category</option>
+            {categories.category2.map((category, index) => (
+              <option key={index} value={category.name}>{category.name}</option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+        <Form.Group controlId="formCategory3">
+          <Form.Label>Category 3</Form.Label>
+          <Form.Control
+            as="select"
+            name="category3"
+            value={formData.category3}
+            onChange={handleChange}
+          >
+            <option value="">Select a category</option>
+            {categories.category3.map((category, index) => (
+              <option key={index} value={category.name}>{category.name}</option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+        <Form.Group controlId="formCategory4">
+          <Form.Label>Category 4</Form.Label>
+          <Form.Control
+            as="select"
+            name="category4"
+            value={formData.category4}
+            onChange={handleChange}
+          >
+            <option value="">Select a category</option>
+            {categories.category4.map((category, index) => (
+              <option key={index} value={category.name}>{category.name}</option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+
         <Form.Group controlId="formTitle">
-          <Form.Label>제목</Form.Label>
-          <Form.Control type="text" placeholder="제목 입력" name="title" value={formData.title} onChange={handleChange} />
+          <Form.Label>Title</Form.Label>
+          <Form.Control
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Enter the news title"
+          />
         </Form.Group>
         <Form.Group controlId="formSubtitle">
-          <Form.Label>부제목</Form.Label>
-          <Form.Control type="text" placeholder="부제목 입력" name="subtitle" value={formData.subtitle} onChange={handleChange} />
+          <Form.Label>Subtitle</Form.Label>
+          <Form.Control
+            type="text"
+            name="subtitle"
+            value={formData.subtitle}
+            onChange={handleChange}
+            placeholder="Enter the news subtitle"
+          />
         </Form.Group>
         <Form.Group controlId="formContent">
-          <Form.Label>내용</Form.Label>
-          <Form.Control as="textarea" rows={5} name="content" value={formData.content} onChange={handleChange} />
+          <Form.Label>Content</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={10}
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            placeholder="Enter the news content"
+          />
         </Form.Group>
         <Form.Group controlId="formImage">
-          <Form.Label>이미지 업로드</Form.Label>
-          <Form.Control type="file" onChange={handleImageChange} />
+          <Form.Label>Image</Form.Label>
+          <Form.Control
+            type="file"
+            name="image"
+            onChange={handleFileChange}
+          />
         </Form.Group>
-        <Button variant="primary" type="submit">저장</Button>
+        <Button variant="primary" type="submit" className="mt-3">
+          Submit
+        </Button>
       </Form>
     </Container>
   );

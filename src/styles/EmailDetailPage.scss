@@ -23,3 +23,35 @@
   text-align: center; // 로딩 텍스트를 중앙 정렬
   padding: 50px 0; // 패딩
 }
+
+.email-detail-container {
+  padding: 20px;
+  margin-left: 250px; /* 네브바의 폭에 맞게 조정 */
+  box-sizing: border-box;
+}
+
+.email-detail-container h2 {
+  margin-top: 0;
+}
+
+.email-detail-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.email-detail-container ul li {
+  margin: 5px 0;
+}
+
+.email-detail-container a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.email-detail-container a:hover {
+  text-decoration: underline;
+}
+
+.email-detail-container p {
+  margin: 10px 0;
+}

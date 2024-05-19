@@ -65,24 +65,18 @@ const EmailsPage = () => {
           </tr>
         </thead>
         <tbody>
-          {currentEmails.map((email, index) => (
-            <tr key={index}>
-              <td>
-                <Link to={`/emails/${email._id.$oid || email._id}`}>{email.subject}</Link>
-              </td>
-              <td>{email.from}</td>
-              <td>{new Date(email.date).toLocaleString()}</td>
-              <td>
-                {email.attachments && email.attachments.length > 0 ? (
-                  email.attachments.map((attachment, idx) => (
-                    <div key={idx}>{attachment.filename}</div>
-                  ))
-                ) : (
-                  'No attachments'
-                )}
-              </td>
-            </tr>
-          ))}
+            {currentEmails.map((email, index) => (
+                <tr key={index}>
+                    <td><Link to={`/emails/${email._id.$oid || email._id}`}>{email.subject}</Link></td>
+                    <td>{email.from}</td>
+                    <td>{email.date}</td>
+                    <td>{email.attachments && email.attachments.length > 0 ? (
+                          email.attachments.map((attachment, idx) => <div key={idx}>{attachment.filename}</div>)
+                      ) : (
+                          'No attachments'
+                      )}</td>
+                </tr>
+            ))}
         </tbody>
       </Table>
       <Paginate

@@ -1,62 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import '../styles/EmailDetailPage.scss';
 
-function EmailDetailPage() {
-  const { id } = useParams();  // URL에서 id 파라미터를 추출
-  console.log('Email ID:', id);  // 로그로 id 확인
-
-  const [emailDetails, setEmailDetails] = useState(null);  // 이메일 세부 정보를 저장할 상태
+const EmailDetailPage = () => {
+  const { id } = useParams();
+  const [email, setEmail] = useState(null);
 
   useEffect(() => {
-    async function fetchEmailDetails() {
-      console.log(`Fetching details for ID: ${id}`); // Fetching log
+    const fetchEmail = async () => {
       try {
         const response = await fetch(`http://localhost:5000/api/emails/${id}`);
         if (!response.ok) {
-          throw new Error('Something went wrong!');
+          throw new Error('Failed to fetch');
         }
         const data = await response.json();
-        setEmailDetails(data);
-        console.log('Fetched data:', data); // Fetched data log
+        setEmail(data);
       } catch (error) {
-        console.error('Error fetching email details:', error);
+        console.error('Error fetching email:', error);
       }
-    }
+    };
 
-    if (id && id !== '[object Object]') { // 추가적인 확인 로직
-      fetchEmailDetails();
-    } else {
-      console.log('Invalid ID:', id);
-    }
+    fetchEmail();
   }, [id]);
 
+  if (!email) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="email-details">
-      {emailDetails ? (
-        <div>
-          <h1>{emailDetails.subject}</h1>
-          <p>From: {emailDetails.from}</p>
-          <p>Date Received: {emailDetails.date}</p>
-          {emailDetails && emailDetails.attachments && emailDetails.attachments.length > 0 ? (
-              <div>
-                <h2>Attachments:</h2>
-                <ul>
-                  {emailDetails.attachments.map((attachment, idx) => (
-                    <li key={idx}>{attachment.filename} <a href={attachment.path} download>Download</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p>No attachments</p>
-            )}
-        </div>
-      ) : (
-        <p>Loading...</p>
-      )}
+    <div className="email-detail-container">
+      <h2>{email.subject}</h2>
+      <p><strong>From:</strong> {email.from}</p>
+      <p><strong>Date:</strong> {email.date}</p>
+      <h3>Attachments:</h3>
+      <ul>
+        {email.attachments && email.attachments.length > 0 ? (
+          email.attachments.map((attachment, idx) => (
+            <li key={idx}>
+              <a href={`http://localhost:5000/api/download/${encodeURIComponent(attachment.filename)}`} download>{attachment.filename}</a>
+            </li>
+          ))
+        ) : (
+          <li>No attachments</li>
+        )}
+      </ul>
+      <Link to="/emails">Back to Emails</Link>
     </div>
   );
-}
+};
 
 export default EmailDetailPage;
