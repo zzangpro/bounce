@@ -31,40 +31,32 @@ def download_file(filename):
 @app.route('/api/process-hwp', methods=['POST'])
 def process_hwp():
     try:
-        # MongoDB에서 가장 최근의 이메일을 가져옵니다.
         email = emails_collection.find_one(sort=[('_id', -1)])
         if not email or 'attachments' not in email or not email['attachments']:
             logging.error('No email attachments found')
             return jsonify({'error': 'No email attachments found'}), 404
 
-        # 첨부파일 경로 설정 (예제에서는 첫 번째 첨부파일을 처리)
         attachment = email['attachments'][0]
-        attachment_path = attachment['path']  # 올바른 키를 사용하여 경로를 가져옴
-
-        # 로그 추가: 경로 확인
+        attachment_path = attachment['path']
         logging.debug(f"Processing HWP file at path: {attachment_path}")
 
-        # HWP 파일 처리
         if not os.path.exists(attachment_path):
             logging.error(f'File not found: {attachment_path}')
             return jsonify({'error': f'File not found: {attachment_path}'}), 404
 
-        content = hwp_processor.extract_text(attachment_path)
-        title, subtitle, content_text = hwp_processor.analyze_content(content)
-
-        # 이미지 첨부 파일 선택
+        title, subtitle, content_text = hwp_processor.analyze_content(attachment_path)
+        
         image_path = next((att['path'] for att in email['attachments'] if att['filename'].lower().endswith(('.png', '.jpg', '.jpeg'))), None)
-
+        
         data = {
             'title': title,
             'subtitle': subtitle,
             'content': content_text,
             'category': '자동선택된 카테고리',
-            'image': image_path  # 이미지 경로 추가
+            'image': image_path
         }
         return jsonify(data), 200
     except Exception as e:
-        # 로그 추가: 에러 메시지 출력
         logging.error(f"Error processing HWP file: {e}")
         return jsonify({'error': str(e)}), 500
 
