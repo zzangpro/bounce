@@ -1,27 +1,30 @@
+import chardet
+import logging
 from flask import Flask, request, jsonify, Response, send_file
 from flask_cors import CORS
 import os
 import hwp_processor
 from pymongo import MongoClient
 from bson import ObjectId, json_util
-import logging
 
 app = Flask(__name__)
 CORS(app)
 
-# 로그 설정
 logging.basicConfig(level=logging.DEBUG)
 
-# MongoDB Atlas 연결
 client = MongoClient('mongodb+srv://jyspress:LFC5XdWvhfJ3Io6s@cluster0.ninp3j8.mongodb.net/')
 db = client['bounce']
 news_collection = db['news']
 emails_collection = db['emails']
 categories_collection = db['categories']
 
+def decode_filename(encoded_name):
+    result = chardet.detect(encoded_name)
+    return encoded_name.decode(result['encoding'])
+
 @app.route('/api/download/<filename>', methods=['GET'])
 def download_file(filename):
-    directory = 'D:/path/to/save/'  # 실제 파일 저장 경로로 변경
+    directory = 'D:/path/to/save/'
     file_path = os.path.join(directory, filename)
     try:
         return send_file(file_path, as_attachment=True)
@@ -37,7 +40,8 @@ def process_hwp():
             return jsonify({'error': 'No email attachments found'}), 404
 
         attachment = email['attachments'][0]
-        attachment_path = attachment['path']
+        encoded_path = attachment['path'].encode()
+        attachment_path = decode_filename(encoded_path)
         logging.debug(f"Processing HWP file at path: {attachment_path}")
 
         if not os.path.exists(attachment_path):
@@ -46,7 +50,10 @@ def process_hwp():
 
         title, subtitle, content_text = hwp_processor.analyze_content(attachment_path)
         
-        image_path = next((att['path'] for att in email['attachments'] if att['filename'].lower().endswith(('.png', '.jpg', '.jpeg'))), None)
+        logging.debug(f"Extracted title: {title}")
+        logging.debug(f"Extracted content: {content_text[:100]}...")
+
+        image_path = next((decode_filename(att['path'].encode()) for att in email['attachments'] if att['filename'].lower().endswith(('.png', '.jpg', '.jpeg'))), None)
         
         data = {
             'title': title,
