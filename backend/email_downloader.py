@@ -9,7 +9,7 @@ import gridfs
 import os
 import re
 import urllib.parse
-
+from bson import ObjectId
 
 # 로그 기본 설정
 logging.basicConfig(filename='email_downloader.log', level=logging.DEBUG, 
@@ -22,20 +22,19 @@ email_collection = db['emails']
 fs = gridfs.GridFS(db)
 fs_files_collection = db['fs.files']
 
-
 # 로그 파일 경로
 log_file_path = 'D:/path/to/email_download.log'
 
 def check_file_in_gridfs(file_id):
     # GridFS에서 파일 ID 확인
-    result = fs_files_collection.find_one({"_id": file_id})
+    result = fs_files_collection.find_one({"_id": ObjectId(file_id)})
     return result is not None
 
 def decode_filename(encoded_filename):
     try:
         decoded_filename = urllib.parse.unquote(encoded_filename)
         return decoded_filename.encode('latin1').decode('utf-8')
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, TypeError):
         return encoded_filename
 
 def parse_log_file_and_check_ids(log_file_path):
@@ -58,7 +57,7 @@ def parse_log_file_and_check_ids(log_file_path):
                 encoded_filename = saved_file_match.group(1).strip()
                 file_id = saved_file_match.group(2).strip()
                 decoded_filename = decode_filename(encoded_filename)
-                print(f"Original Filename: {encoded_filename}, Decoded Filename: {decoded_filename}, File ID: {file_id}")
+                logging.info(f"Original Filename: {encoded_filename}, Decoded Filename: {decoded_filename}, File ID: {file_id}")
     
     # MongoDB에서 파일 ID 확인
     for file_id in file_ids:
@@ -137,8 +136,9 @@ def download_emails():
                             
                             try:
                                 file_id = fs.put(file_data, filename=filename)
-                                attachment_files.append({'filename': filename, 'file_id': str(file_id)})  # file_id를 문자열로 변환하여 저장
-                                logging.info(f"Attachment saved: {filename}, file_id: {file_id}")
+                                decoded_filename = decode_filename(filename)
+                                attachment_files.append({'filename': decoded_filename, 'file_id': str(file_id)})  # file_id를 문자열로 변환하여 저장
+                                logging.info(f"Attachment saved: {decoded_filename}, file_id: {file_id}")
                             except Exception as e:
                                 logging.error(f"Cannot save file to MongoDB: {e}")
 

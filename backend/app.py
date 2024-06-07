@@ -40,8 +40,7 @@ def process_hwp():
             return jsonify({'error': 'No email attachments found'}), 404
 
         attachment = email['attachments'][0]
-        encoded_path = attachment['path'].encode()
-        attachment_path = decode_filename(encoded_path)
+        attachment_path = attachment['path']
         logging.debug(f"Processing HWP file at path: {attachment_path}")
 
         if not os.path.exists(attachment_path):
@@ -51,9 +50,9 @@ def process_hwp():
         title, subtitle, content_text = hwp_processor.analyze_content(attachment_path)
         
         logging.debug(f"Extracted title: {title}")
-        logging.debug(f"Extracted content: {content_text[:100]}...")
+        logging.debug(f"Extracted content: {content_text[:100]}...")  # 내용이 길면 일부만 출력
 
-        image_path = next((decode_filename(att['path'].encode()) for att in email['attachments'] if att['filename'].lower().endswith(('.png', '.jpg', '.jpeg'))), None)
+        image_path = next((att['path'] for att in email['attachments'] if att['filename'].lower().endswith(('.png', '.jpg', '.jpeg'))), None)
         
         data = {
             'title': title,
@@ -66,6 +65,7 @@ def process_hwp():
     except Exception as e:
         logging.error(f"Error processing HWP file: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/')
 def home():
